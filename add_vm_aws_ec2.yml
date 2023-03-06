@@ -1,0 +1,40 @@
+
+
+- name: launch VM
+
+  hosts: localhost
+  tasks:
+    - name: launching AWS ec2 instance 
+      ec2_instance:
+        key_name: vockey
+        instance_type: t2.micro
+        image_id: ami-0557a15b87f6559cf
+        region: us-east-1
+        wait: yes
+        security_group: default
+        count: 1
+        vpc_subnet_id: subnet-02e11e9d75edd7adf
+        network:
+          assign_public_ip: yes
+        aws_access_key: AKIAYJDJUFPH3AEC2QGZ
+        aws_secret_key: 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
+
+      register: ec2
+      with_items: ec2_instances
+    - debug:
+          var: ec2
+          
+    - name: Pause for 10 seconds to start instance
+      ansible.builtin.pause:
+        seconds: 10
+
+    - name: Print new instance ip
+      ansible.builtin.debug:
+        msg: "{{ ec2.results[0].instance_ids[0] }}"
+        
+    - name: Add host to worker group
+      add_host:
+        hostname: "{{ ec2.results[0].instance_ids[0] }}"
+        groups:
+          - worker
+      
